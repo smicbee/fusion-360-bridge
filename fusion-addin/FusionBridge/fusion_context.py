@@ -2,30 +2,38 @@ import adsk.core
 import adsk.fusion
 
 
-def get_context():
+def _base_context():
     app = adsk.core.Application.get()
     ui = app.userInterface
     product = app.activeProduct
     design = adsk.fusion.Design.cast(product)
     root_comp = design.rootComponent if design else None
+    document = app.activeDocument
 
     return {
-        'adsk': adsk,
         'app': app,
         'ui': ui,
         'product': product,
         'design': design,
         'rootComp': root_comp,
+        'document': document,
+    }
+
+
+def get_context():
+    ctx = _base_context()
+    return {
+        'adsk': adsk,
+        **ctx,
         'result': None,
     }
 
 
-def get_state():
-    app = adsk.core.Application.get()
-    product = app.activeProduct
-    design = adsk.fusion.Design.cast(product)
-    root_comp = design.rootComponent if design else None
-    document = app.activeDocument
+def get_state(queue_size: int = 0, is_busy: bool = False, current_job_id: str | None = None):
+    ctx = _base_context()
+    document = ctx['document']
+    design = ctx['design']
+    root_comp = ctx['rootComp']
 
     return {
         'ok': True,
@@ -33,4 +41,7 @@ def get_state():
         'documentName': document.name if document else None,
         'hasActiveDesign': design is not None,
         'rootComponentName': root_comp.name if root_comp else None,
+        'queueSize': queue_size,
+        'busy': is_busy,
+        'currentJobId': current_job_id,
     }

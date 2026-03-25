@@ -9,14 +9,17 @@ Das Projekt stellt eine lokale Exec-Bridge bereit:
 - Fusion-360-Add-in läuft direkt in Fusion
 - lokaler HTTP-Server nimmt Requests entgegen
 - Python-Code wird im Fusion-Kontext ausgeführt
-- Antworten liefern `ok`, `stdout`, `result` und Fehlerdetails zurück
+- Antworten liefern `ok`, `stdout`, `result`, Laufzeit und Fehlerdetails zurück
 
 ## MVP-Umfang
 
 - `GET /ping`
 - `GET /state`
+- `GET /logs`
 - `POST /exec`
 - serielle Job-Queue
+- Timeout pro Request
+- einfacher Datei-Logger
 - offener Python-Exec-Modus ohne Auth
 - Beispielskripte für einfache Modell-Erzeugung
 
@@ -38,6 +41,7 @@ Bewusst offen für lokales/vertrautes Netzwerk. Keine Authentifizierung im MVP.
 ## Nächste Schritte
 
 1. Add-in in Fusion 360 installieren
-2. Bridge starten und `/ping` prüfen
+2. Bridge starten und `/ping` + `/state` prüfen
 3. Beispielskript via `/exec` ausführen
-4. Danach freie Modellierungs-Workflows aufbauen
+4. Logs und Laufzeitverhalten im echten Fusion-Setup validieren
+5. Danach freie Modellierungs-Workflows aufbauen

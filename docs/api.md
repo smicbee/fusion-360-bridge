@@ -10,7 +10,7 @@ Prüft, ob die Bridge läuft.
 {
   "ok": true,
   "service": "fusion-bridge",
-  "version": "0.1.0"
+  "version": "0.2.0"
 }
 ```
 
@@ -26,7 +26,25 @@ Liefert einfachen Laufzeitstatus.
   "fusionRunning": true,
   "documentName": "Unnamed",
   "hasActiveDesign": true,
-  "rootComponentName": "RootComponent"
+  "rootComponentName": "RootComponent",
+  "queueSize": 0,
+  "busy": false,
+  "currentJobId": null
+}
+```
+
+## `GET /logs`
+
+Liefert die letzten Logzeilen des Add-ins.
+
+### Beispiel-Response
+
+```json
+{
+  "ok": true,
+  "lines": [
+    "{\"ts\":\"...\",\"event\":\"addin_started\"}"
+  ]
 }
 ```
 
@@ -38,7 +56,8 @@ Führt Python-Code im Fusion-Kontext aus.
 
 ```json
 {
-  "code": "print('hello from fusion')"
+  "code": "print('hello from fusion')",
+  "timeoutSeconds": 120
 }
 ```
 
@@ -49,7 +68,9 @@ Führt Python-Code im Fusion-Kontext aus.
   "ok": true,
   "stdout": "hello from fusion\n",
   "result": null,
-  "error": null
+  "error": null,
+  "durationMs": 3,
+  "jobId": "..."
 }
 ```
 
@@ -60,6 +81,18 @@ Führt Python-Code im Fusion-Kontext aus.
   "ok": false,
   "stdout": "",
   "result": null,
-  "error": "Traceback ..."
+  "error": "Traceback ...",
+  "durationMs": 3,
+  "jobId": "..."
+}
+```
+
+### Timeout-Response
+
+```json
+{
+  "ok": false,
+  "error": "execution timeout",
+  "jobId": "..."
 }
 ```

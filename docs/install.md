@@ -31,6 +31,7 @@ Im Browser oder Terminal:
 
 ```bash
 curl http://127.0.0.1:8765/ping
+python3 bridge-client/call_exec.py --state
 ```
 
 ## 4. Beispielcode ausführen
@@ -38,8 +39,17 @@ curl http://127.0.0.1:8765/ping
 ```bash
 python3 bridge-client/call_exec.py examples/ping.py
 python3 bridge-client/call_exec.py examples/create_box.py
+python3 bridge-client/call_exec.py --logs
+```
+
+## 5. Logdatei
+
+Das Add-in schreibt eine einfache JSONL-Logdatei in den Add-in-Ordner:
+
+```text
+fusion-addin/FusionBridge/fusion_bridge.log
 ```
 
 ## Hinweis
 
-Das ist ein frühes PoC-Gerüst. Event-/Timer-Anbindung in Fusion kann je nach API-Version Feinschliff brauchen.
+Das ist weiter ein frühes PoC-Gerüst. Die kritischsten Teile für Requests, Logging und Timeout-Verhalten sind jetzt vorbereitet, aber die konkrete Timer-/Event-Anbindung in Fusion muss auf deinem echten Setup validiert werden.
