@@ -1,4 +1,4 @@
-# Installation (PoC)
+# Installation (aktueller Debug-Stand)
 
 ## 1. Add-in-Dateien ablegen
 
@@ -25,39 +25,17 @@ Typische Pfade:
 - Add-in `FusionBridge` auswählen
 - `Run` klicken
 
-## 3. Bridge testen
+## 3. Erwartung im aktuellen Debug-Stand
 
-Im Browser oder Terminal:
+- Popup: `FusionBridge Debug-Start erfolgreich`
+- Datei im Add-in-Ordner: `fusion_bridge_boot.log`
 
-```bash
-curl http://127.0.0.1:8765/ping
-python3 bridge-client/call_exec.py --state
-```
+## 4. Wenn es nicht klappt
 
-Achte bei `--state` besonders auf:
-
-- `hasActiveDesign`
-- `queueSize`
-- `busy`
-- `pumpMode`
-
-## 4. Beispielcode ausführen
-
-```bash
-python3 bridge-client/call_exec.py examples/ping.py
-python3 bridge-client/call_exec.py examples/get_state.py
-python3 bridge-client/call_exec.py examples/create_box.py
-python3 bridge-client/call_exec.py --logs
-```
-
-## 5. Logdatei
-
-Das Add-in schreibt eine einfache JSONL-Logdatei in den Add-in-Ordner:
-
-```text
-fusion-addin/FusionBridge/fusion_bridge.log
-```
+- prüfen, ob `fusion_bridge_boot.log` entstanden ist
+- dessen Inhalt auslesen
+- falls keine Datei entsteht, crasht Fusion sehr früh beim Laden des Add-ins
 
 ## Hinweis
 
-Das ist weiter ein frühes PoC-Gerüst. Die Laufzeit-Anbindung wurde robuster gemacht und bevorzugt jetzt Custom Events mit Timer-Fallback, aber die konkrete Ausführung muss auf deinem echten Fusion-Setup validiert werden.
+Die volle Bridge-Logik ist vorübergehend aus `FusionBridge.py` herausgenommen, damit der Start isoliert getestet werden kann. Nach erfolgreichem Grundstart wird sie schrittweise wieder aktiviert.
