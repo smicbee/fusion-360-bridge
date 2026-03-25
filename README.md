@@ -4,20 +4,20 @@ Offene Bridge für Autodesk Fusion 360, damit ein externes System Python-Code im
 
 ## Aktueller Status
 
-Das Projekt läuft aktuell im **Debug-Startup-Modus, Stufe 2**. Die volle Bridge-Struktur bleibt im Repo, aber `FusionBridge.py` aktiviert im Moment nur den Add-in-Grundstart plus Logging- und Executor-Checks.
+Die Add-in-Datei ist aktuell im **nuklearen Minimal-Testmodus**: `FusionBridge.py` versucht nur noch, beim Laden von `run()` einen kleinen Boot-Log zu schreiben.
+
+Damit isolieren wir, ob Fusion den Add-in-Aufruf selbst überhaupt ausführt.
 
 ## Ziel
 
-Das Projekt stellt langfristig eine lokale Exec-Bridge bereit:
+Langfristig soll die Bridge:
 
-- Fusion-360-Add-in läuft direkt in Fusion
-- lokaler HTTP-Server nimmt Requests entgegen
-- Python-Code wird im Fusion-Kontext ausgeführt
-- Antworten liefern `ok`, `stdout`, `result`, Laufzeit und Fehlerdetails zurück
+- HTTP-Server (ping/state/logs/exec) bereitstellen
+- Fusion-API-Aufrufe im Python-Exec-Modus ausführen
 
-## Nächster praktischer Schritt
+## Nächster Schritt
 
-1. Debug-Stufe 2 in Fusion starten
-2. prüfen, ob Popup erscheint
-3. prüfen, ob `fusion_bridge_boot.log` und `fusion_bridge.log` entstehen
-4. danach Server und Runtime-Pump schrittweise wieder zuschalten
+1. Add-in mit minimaler `FusionBridge.py` starten
+2. prüfen, ob `fusion_bridge_boot.log` erzeugt wird
+3. falls ja: schrittweise mehr Funktionalität wieder aktivieren
+4. falls nein: Manifest/Ordner-Pfad nochmal hart prüfen

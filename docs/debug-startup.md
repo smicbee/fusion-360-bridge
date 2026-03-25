@@ -1,44 +1,28 @@
 # Debug-Startup-Modus
 
-## Aktueller Stand: Debug-Stufe 2
+## Aktueller Stand: Nuklearer Minimal-Test
 
-Diese Version von `FusionBridge.py` ist weiterhin reduziert, aber etwas größer als die Minimalversion.
+Dieses `FusionBridge.py` ist jetzt auf eine **absolut minimale Form** reduziert.
 
 ## Ziel
 
-Prüfen, ob folgende Teile sauber funktionieren, ohne schon die volle Bridge zu starten:
-
-- Basis-`run()`
-- `logging_utils`
-- `Executor`-Import und Instanziierung
-- Datei-Logging vor und nach diesen Schritten
+- Prüfen, ob Fusion den Add-in-Ladepfad überhaupt ausführt
+- Ausschluss, dass `adsk`/andere Module-Importe beim Start sofort crashen
 
 ## Verhalten
 
-- kein HTTP-Server
-- keine Queue
-- keine Custom Events
-- keine Timer
-- Datei-Log in `fusion_bridge_boot.log`
-- zusätzlich JSONL-Logging über `fusion_bridge.log`
+- **`run(context)` schreibt nur in** `fusion_bridge_boot.log`
+- **kein** HTTP-Server
+- **kein** Popup
+- keine weiteren Module-Importe
 
 ## Erwartete Signale
 
-### Popup
+Nach `Run` sollte `fusion_bridge_boot.log` im Add-in-Ordner mindestens enthalten:
 
 ```text
-FusionBridge Debug-Stufe 2 erfolgreich
+run() entered
+context type: ...
 ```
 
-### Dateien
-
-- `fusion_bridge_boot.log`
-- `fusion_bridge.log`
-
-## Aussagekraft
-
-Wenn Debug-Stufe 2 funktioniert, liegt der ursprüngliche Crash sehr wahrscheinlich erst in:
-
-- Server-Start
-- Queue-Aufbau
-- Runtime-Pump / Custom Events / Timer
+Wenn das nicht passiert, ist das Add-in vermutlich noch nicht korrekt geladen (Struktur/Manifest/Pfad).
