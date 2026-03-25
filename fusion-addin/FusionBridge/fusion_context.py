@@ -1,6 +1,8 @@
 import adsk.core
 import adsk.fusion
 
+import fusion_helpers
+
 
 def _base_context():
     app = adsk.core.Application.get()
@@ -25,6 +27,12 @@ def get_context():
     return {
         'adsk': adsk,
         **ctx,
+        'helpers': fusion_helpers,
+        'app_info': lambda: fusion_helpers.app_info(ctx['app'], ctx['document'], ctx['design'], ctx['rootComp']),
+        'show_message': lambda text: fusion_helpers.show_message(ctx['ui'], text),
+        'list_occurrences': lambda: fusion_helpers.list_occurrences(ctx['rootComp']),
+        'list_bodies': lambda: fusion_helpers.list_bodies(ctx['rootComp']),
+        'create_box': lambda width, height, depth: fusion_helpers.create_box(ctx['rootComp'], width, height, depth),
         'result': None,
     }
 

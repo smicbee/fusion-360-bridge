@@ -74,6 +74,13 @@ Führt Python-Code im Fusion-Kontext aus.
 - `timeoutSeconds` ist optional.
 - Werte > `300` werden auf `300` begrenzt.
 - Es gibt keine feste Obergrenze für die Code-Länge im Body.
+- Neben rohem Python stehen im Exec-Kontext jetzt auch Helper bereit:
+  - `helpers`
+  - `app_info()`
+  - `show_message(text)`
+  - `list_occurrences()`
+  - `list_bodies()`
+  - `create_box(width, height, depth)`
 
 ### Erfolgs-Response
 
@@ -109,4 +116,12 @@ Führt Python-Code im Fusion-Kontext aus.
   "error": "execution timeout",
   "jobId": "..."
 }
+```
+
+## Client-Komfort
+
+Der CLI-Client unterstützt jetzt auch Inline-Code:
+
+```bash
+python3 bridge-client/call_exec.py --code "print(app_info())"
 ```

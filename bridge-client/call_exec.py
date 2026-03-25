@@ -23,6 +23,7 @@ def post_json(url: str, payload: dict):
 def main():
     parser = argparse.ArgumentParser(description='Send Python code to Fusion Bridge')
     parser.add_argument('file', nargs='?', help='Python file to execute in Fusion')
+    parser.add_argument('--code', help='Inline Python code to execute in Fusion')
     parser.add_argument('--base-url', default='http://127.0.0.1:8765')
     parser.add_argument('--timeout', type=int, default=DEFAULT_TIMEOUT_SECONDS)
     parser.add_argument('--state', action='store_true', help='Read /state instead of executing code')
@@ -42,10 +43,16 @@ def main():
         print(json.dumps(fetch_json(f'{args.base_url}/logs'), indent=2, ensure_ascii=False))
         return
 
-    if not args.file:
-        parser.error('file is required unless --state or --logs is used')
+    if args.code and args.file:
+        parser.error('use either a file or --code, not both')
 
-    code = Path(args.file).read_text(encoding='utf-8')
+    if args.code:
+        code = args.code
+    else:
+        if not args.file:
+            parser.error('file is required unless --state or --logs or --code is used')
+        code = Path(args.file).read_text(encoding='utf-8')
+
     response = post_json(f'{args.base_url}/exec', {
         'code': code,
         'timeoutSeconds': args.timeout,

@@ -2,22 +2,52 @@
 
 Offene Bridge für Autodesk Fusion 360, damit ein externes System Python-Code im Fusion-Kontext ausführen kann.
 
-## Aktueller Status
+## Status
 
-Die Add-in-Datei ist aktuell im **nuklearen Minimal-Testmodus**: `FusionBridge.py` versucht nur noch, beim Laden von `run()` einen kleinen Boot-Log zu schreiben.
+Die Bridge läuft jetzt als nutzbarer Remote-Exec-Stack:
 
-Damit isolieren wir, ob Fusion den Add-in-Aufruf selbst überhaupt ausführt.
+- HTTP-Server (`/ping`, `/state`, `/logs`, `/exec`)
+- serielle Job-Queue
+- Runtime-Pump mit beobachtbarem Modus
+- LAN-Zugriff möglich
+- rohes Python bleibt erlaubt
+- zusätzliche Helper-Funktionen für häufige Aufgaben sind verfügbar
 
-## Ziel
+## Exec-Kontext
 
-Langfristig soll die Bridge:
+Neben dem offenen Python-Kontext stehen jetzt auch Helper bereit:
 
-- HTTP-Server (ping/state/logs/exec) bereitstellen
-- Fusion-API-Aufrufe im Python-Exec-Modus ausführen
+- `helpers`
+- `app_info()`
+- `show_message(text)`
+- `list_occurrences()`
+- `list_bodies()`
+- `create_box(width, height, depth)`
 
-## Nächster Schritt
+Wichtig: Diese Helper sind Komfortfunktionen. Rohes Python bleibt jederzeit möglich und ist weiterhin der Escape Hatch für alles, was noch nicht abstrahiert wurde.
 
-1. Add-in mit minimaler `FusionBridge.py` starten
-2. prüfen, ob `fusion_bridge_boot.log` erzeugt wird
-3. falls ja: schrittweise mehr Funktionalität wieder aktivieren
-4. falls nein: Manifest/Ordner-Pfad nochmal hart prüfen
+## Nützliche Beispiele
+
+- `examples/app_info.py`
+- `examples/list_bodies.py`
+- `examples/list_occurrences.py`
+- `examples/show_popup.py`
+- `examples/create_demo_box.py`
+- `examples/create_box.py`
+- `examples/get_state.py`
+
+## Client
+
+Der kleine CLI-Client unterstützt jetzt:
+
+- Dateiausführung
+- `--code` für Inline-Python
+- `--state`
+- `--logs`
+- `--timeout`
+
+Beispiel:
+
+```bash
+python3 bridge-client/call_exec.py --code "print(app_info())"
+```
