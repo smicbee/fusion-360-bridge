@@ -5,12 +5,24 @@ from pathlib import Path
 
 import adsk.core
 
+from logging_utils import log_event
+from executor import Executor
+from request_queue import RequestQueue
+from bridge_server import BridgeServer
+
 _BOOT_LOG_PATH = Path(__file__).resolve().parent / 'fusion_bridge_boot.log'
 _ADDIN_DIR = str(Path(__file__).resolve().parent)
 _APP = None
 _UI = None
+_QUEUE = None
 _EXECUTOR = None
-_VERSION = 'stage3c-pathfix'
+_SERVER = None
+_RUNTIME = {
+    'busy': False,
+    'currentJobId': None,
+    'startedAt': None,
+}
+_RUNTIME_LOG_PREFIX = 'stage4-server'
 
 if _ADDIN_DIR not in sys.path:
     sys.path.insert(0, _ADDIN_DIR)
@@ -32,20 +44,13 @@ def _safe_message_box(text):
             pass
 
 
-def _resolve_status(path_name):
-    return 'yes' if (Path(_ADDIN_DIR) / path_name).exists() else 'no'
-
-
 def run(context):
-    global _APP, _UI, _EXECUTOR
+    global _APP, _UI, _QUEUE, _EXECUTOR, _SERVER
 
     _boot_log('run() entered')
-    _boot_log('version: {}'.format(_VERSION))
+    _boot_log('version: {}'.format(_RUNTIME_LOG_PREFIX))
     _boot_log('context type: {}'.format(type(context).__name__))
-    _boot_log('sys.path contains addin dir: {}'.format(str(Path(_ADDIN_DIR) in map(Path, []))) if False else '')
     _boot_log('addin_dir: {}'.format(_ADDIN_DIR))
-    _boot_log('logging_utils file exists: {}'.format(_resolve_status('logging_utils.py')))
-    _boot_log('executor file exists: {}'.format(_resolve_status('executor.py')))
     _boot_log('sys.path has addin dir: {}'.format(_ADDIN_DIR in sys.path))
 
     try:
@@ -57,40 +62,38 @@ def run(context):
         _UI = _APP.userInterface
         _boot_log('ui acquired: {}'.format(_UI is not None))
 
+        _QUEUE = RequestQueue()
+        _EXECUTOR = Executor()
+        _boot_log('queue+executor ready')
+
+        # Debug-only request processing path: no timer/custom event yet
+        _RUNTIME['startedAt'] = datetime.utcnow().isoformat()
+        _SERVER = BridgeServer(_QUEUE, _RUNTIME, host='127.0.0.1', port=8765)
+        _SERVER.start()
+        _boot_log('bridge_server started on 127.0.0.1:8765')
+        log_event('debug_stage4_server_started', host='127.0.0.1', port=8765)
+
         if _UI:
-            _safe_message_box('FusionBridge {} gestartet'.format(_VERSION))
+            _safe_message_box('FusionBridge {} gestartet (Server aktiv)'.format(_RUNTIME_LOG_PREFIX))
             _boot_log('popup shown')
-
-        _boot_log('attempt import logging_utils')
-        try:
-            from logging_utils import log_event
-            _boot_log('logging_utils imported')
-            log_event('stage3c_logging_utils_imported')
-        except Exception as e:
-            _boot_log('logging_utils failed: {}'.format(e))
-            _safe_message_box('Logging import failed: {}'.format(e))
-
-        _boot_log('attempt import Executor')
-        try:
-            from executor import Executor
-            _boot_log('executor module imported')
-            _EXECUTOR = Executor()
-            _boot_log('executor instantiated successfully')
-            try:
-                from logging_utils import log_event
-                log_event('stage3c_executor_ready')
-            except Exception:
-                _boot_log('log_event unavailable after executor')
-            _safe_message_box('Executor ready in {}'.format(_VERSION))
-        except Exception as e:
-            _boot_log('executor failed: {}'.format(e))
-            _safe_message_box('Executor init failed: {}'.format(e))
 
     except Exception:
         _boot_log('run() crashed')
         _boot_log(traceback.format_exc())
-        _safe_message_box('FusionBridge {} Fehler:\n{}'.format(_VERSION, traceback.format_exc()))
+        _safe_message_box('FusionBridge {} Fehler:\n{}'.format(_RUNTIME_LOG_PREFIX, traceback.format_exc()))
 
 
 def stop(context):
+    global _SERVER, _EXECUTOR, _QUEUE
+
+    try:
+        if _SERVER:
+            _SERVER.stop()
+            _boot_log('server stopped')
+            log_event('debug_stage4_server_stopped')
+        _SERVER = None
+        _EXECUTOR = None
+        _QUEUE = None
+    except Exception:
+        _boot_log('stop() exception:\n{}'.format(traceback.format_exc()))
     _boot_log('stop() called')
