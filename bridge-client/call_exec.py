@@ -4,6 +4,9 @@ import json
 from pathlib import Path
 from urllib import request
 
+MAX_TIMEOUT_SECONDS = 300
+DEFAULT_TIMEOUT_SECONDS = 300
+
 
 def fetch_json(url: str):
     with request.urlopen(url) as resp:
@@ -21,10 +24,15 @@ def main():
     parser = argparse.ArgumentParser(description='Send Python code to Fusion Bridge')
     parser.add_argument('file', nargs='?', help='Python file to execute in Fusion')
     parser.add_argument('--base-url', default='http://127.0.0.1:8765')
-    parser.add_argument('--timeout', type=int, default=120)
+    parser.add_argument('--timeout', type=int, default=DEFAULT_TIMEOUT_SECONDS)
     parser.add_argument('--state', action='store_true', help='Read /state instead of executing code')
     parser.add_argument('--logs', action='store_true', help='Read /logs instead of executing code')
     args = parser.parse_args()
+
+    if args.timeout <= 0:
+        args.timeout = DEFAULT_TIMEOUT_SECONDS
+    elif args.timeout > MAX_TIMEOUT_SECONDS:
+        args.timeout = MAX_TIMEOUT_SECONDS
 
     if args.state:
         print(json.dumps(fetch_json(f'{args.base_url}/state'), indent=2, ensure_ascii=False))

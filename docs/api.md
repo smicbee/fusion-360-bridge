@@ -10,7 +10,7 @@ Prüft, ob die Bridge läuft.
 {
   "ok": true,
   "service": "fusion-bridge",
-  "version": "0.2.0"
+  "version": "0.3.0"
 }
 ```
 
@@ -29,7 +29,8 @@ Liefert einfachen Laufzeitstatus.
   "rootComponentName": "RootComponent",
   "queueSize": 0,
   "busy": false,
-  "currentJobId": null
+  "currentJobId": null,
+  "pumpMode": "custom-event"
 }
 ```
 
@@ -57,9 +58,13 @@ Führt Python-Code im Fusion-Kontext aus.
 ```json
 {
   "code": "print('hello from fusion')",
-  "timeoutSeconds": 120
+  "timeoutSeconds": 300
 }
 ```
+
+- `timeoutSeconds` ist optional.
+- Werte > `300` werden auf `300` begrenzt.
+- Es gibt keine feste Obergrenze für die Code-Länge im Body.
 
 ### Erfolgs-Response
 

@@ -6,6 +6,9 @@ from fusion_context import get_state
 from logging_utils import log_event, read_recent_lines
 from request_queue import ExecJob
 
+MAX_EXEC_TIMEOUT_SECONDS = 300
+DEFAULT_EXEC_TIMEOUT_SECONDS = 300
+
 
 class BridgeRequestHandler(BaseHTTPRequestHandler):
     queue = None
@@ -61,13 +64,21 @@ class BridgeRequestHandler(BaseHTTPRequestHandler):
             return
 
         code = payload.get('code')
-        timeout_seconds = payload.get('timeoutSeconds', 120)
+        timeout_seconds = payload.get('timeoutSeconds', DEFAULT_EXEC_TIMEOUT_SECONDS)
+
         if not isinstance(code, str) or not code.strip():
             self._send_json(400, {'ok': False, 'error': 'missing code'})
             return
 
-        if not isinstance(timeout_seconds, (int, float)) or timeout_seconds <= 0:
-            timeout_seconds = 120
+        try:
+            timeout_seconds = float(timeout_seconds)
+        except Exception:
+            timeout_seconds = DEFAULT_EXEC_TIMEOUT_SECONDS
+
+        if timeout_seconds <= 0:
+            timeout_seconds = DEFAULT_EXEC_TIMEOUT_SECONDS
+        elif timeout_seconds > MAX_EXEC_TIMEOUT_SECONDS:
+            timeout_seconds = MAX_EXEC_TIMEOUT_SECONDS
 
         job = ExecJob(code=code)
         self.queue.put(job)
