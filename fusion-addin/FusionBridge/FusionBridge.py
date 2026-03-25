@@ -5,11 +5,6 @@ from pathlib import Path
 
 import adsk.core
 
-from logging_utils import log_event
-from executor import Executor
-from request_queue import RequestQueue
-from bridge_server import BridgeServer
-
 _BOOT_LOG_PATH = Path(__file__).resolve().parent / 'fusion_bridge_boot.log'
 _ADDIN_DIR = str(Path(__file__).resolve().parent)
 _APP = None
@@ -24,13 +19,11 @@ _RUNTIME = {
     'startedAt': None,
     'pumpMode': None,
 }
-_RUNTIME_LOG_PREFIX = 'stage5-recovered'
+_RUNTIME_LOG_PREFIX = 'stage5-stable-bootstrap'
 
 if _ADDIN_DIR not in sys.path:
     sys.path.insert(0, _ADDIN_DIR)
 
-
-# no top-level import of runtime_pump to keep startup resilient
 
 def _boot_log(message):
     try:
@@ -48,59 +41,8 @@ def _safe_message_box(text):
             pass
 
 
-def process_pending_jobs():
-    global _QUEUE, _EXECUTOR, _RUNTIME
-
-    if _QUEUE is None or _EXECUTOR is None:
-        return
-
-    while True:
-        job = _QUEUE.get_nowait()
-        if job is None:
-            return
-
-        job.started_at = datetime.utcnow().timestamp()
-        _RUNTIME['busy'] = True
-        _RUNTIME['currentJobId'] = job.job_id
-        log_event('job_started', jobId=job.job_id)
-
-        try:
-            job.response = _EXECUTOR.execute(job.code, job_id=job.job_id)
-        finally:
-            job.finished_at = datetime.utcnow().timestamp()
-            _RUNTIME['busy'] = False
-            _RUNTIME['currentJobId'] = None
-            job.done.set()
-            log_event(
-                'job_finished',
-                jobId=job.job_id,
-                durationMs=int((job.finished_at - job.started_at) * 1000) if job.started_at else None,
-            )
-
-
-def _start_runtime_pump():
-    global _PUMP, _APP, _RUNTIME
-
-    try:
-        from runtime_pump import RuntimePump
-        _PUMP = RuntimePump(_APP, process_pending_jobs, interval_ms=250)
-        try:
-            _PUMP.start()
-            _boot_log('runtime_pump.start() ok')
-        except Exception:
-            _boot_log('runtime_pump.start() failed, fallback')
-            log_event('runtime_pump_custom_start_failed', error=traceback.format_exc())
-            _PUMP.start_timer_fallback()
-        _RUNTIME['pumpMode'] = _PUMP.mode
-        log_event('runtime_pump_mode', mode=_RUNTIME['pumpMode'])
-        _boot_log('runtime pump mode: {}'.format(_RUNTIME['pumpMode']))
-    except Exception:
-        _boot_log('runtime pump unavailable: {}'.format(traceback.format_exc()))
-        _safe_message_box('RuntimePump konnte nicht geladen werden (weiter ohne Pump)')
-
-
 def run(context):
-    global _APP, _UI, _QUEUE, _EXECUTOR, _SERVER
+    global _APP, _UI, _QUEUE, _EXECUTOR, _SERVER, _PUMP
 
     _boot_log('run() entered')
     _boot_log('version: {}'.format(_RUNTIME_LOG_PREFIX))
@@ -117,6 +59,23 @@ def run(context):
         _UI = _APP.userInterface
         _boot_log('ui acquired: {}'.format(_UI is not None))
 
+        if _UI:
+            _safe_message_box('Bootstrap phase 1: app/ui ready')
+            _boot_log('phase1 popup shown')
+    except Exception:
+        _boot_log('phase1 crashed')
+        _boot_log(traceback.format_exc())
+        _safe_message_box('FusionBridge {} phase1 crash:\n{}'.format(_RUNTIME_LOG_PREFIX, traceback.format_exc()))
+        return
+
+    try:
+        from logging_utils import log_event
+        from executor import Executor
+        from request_queue import RequestQueue
+        from bridge_server import BridgeServer
+        _boot_log('core modules imported')
+        log_event('debug_stage5b_core_modules_imported')
+
         _QUEUE = RequestQueue()
         _EXECUTOR = Executor()
         _boot_log('queue+executor ready')
@@ -125,32 +84,80 @@ def run(context):
         _SERVER = BridgeServer(_QUEUE, _RUNTIME, host='127.0.0.1', port=8765)
         _SERVER.start()
         _boot_log('bridge_server started on 127.0.0.1:8765')
-        log_event('debug_stage5_server_started', host='127.0.0.1', port=8765)
-
-        _start_runtime_pump()
-
-        if _UI:
-            _safe_message_box('FusionBridge {} gestartet'.format(_RUNTIME_LOG_PREFIX))
-            _boot_log('popup shown')
-
+        log_event('debug_stage5b_server_started', host='127.0.0.1', port=8765)
     except Exception:
-        _boot_log('run() crashed')
+        _boot_log('core init crashed')
         _boot_log(traceback.format_exc())
-        _safe_message_box('FusionBridge {} Fehler:\n{}'.format(_RUNTIME_LOG_PREFIX, traceback.format_exc()))
+        _safe_message_box('FusionBridge {} core init error:\n{}'.format(_RUNTIME_LOG_PREFIX, traceback.format_exc()))
+        return
+
+    try:
+        from runtime_pump import RuntimePump
+
+        def process_pending_jobs():
+            if _QUEUE is None or _EXECUTOR is None:
+                return
+            while True:
+                job = _QUEUE.get_nowait()
+                if job is None:
+                    return
+
+                job.started_at = datetime.utcnow().timestamp()
+                _RUNTIME['busy'] = True
+                _RUNTIME['currentJobId'] = job.job_id
+                log_event('job_started', jobId=job.job_id)
+
+                try:
+                    job.response = _EXECUTOR.execute(job.code, job_id=job.job_id)
+                finally:
+                    job.finished_at = datetime.utcnow().timestamp()
+                    _RUNTIME['busy'] = False
+                    _RUNTIME['currentJobId'] = None
+                    job.done.set()
+                    log_event('job_finished', jobId=job.job_id, durationMs=int((job.finished_at - job.started_at) * 1000) if job.started_at else None)
+
+        _PUMP = RuntimePump(_APP, process_pending_jobs, interval_ms=250)
+        try:
+            _PUMP.start()
+            _boot_log('runtime pump start() ok')
+        except Exception:
+            log_event('runtime_pump_custom_start_failed', error=traceback.format_exc())
+            _boot_log('runtime_pump.start() failed, trying fallback')
+            try:
+                _PUMP.start_timer_fallback()
+            except Exception:
+                log_event('runtime_pump_fallback_failed', error=traceback.format_exc())
+                _boot_log('runtime pump fallback failed')
+        _RUNTIME['pumpMode'] = _PUMP.mode if _PUMP else None
+        log_event('runtime_pump_mode', mode=_RUNTIME['pumpMode'])
+        _boot_log('runtime pump mode: {}'.format(_RUNTIME.get('pumpMode')))
+    except Exception:
+        _boot_log('runtime pump import/init crashed')
+        _boot_log(traceback.format_exc())
+
+    if _UI:
+        _safe_message_box('FusionBridge {} gestartet'.format(_RUNTIME_LOG_PREFIX))
+        _boot_log('popup shown (phase final)')
 
 
 def stop(context):
     global _SERVER, _EXECUTOR, _QUEUE, _PUMP
 
     try:
+        from logging_utils import log_event
+
         if _PUMP:
             _PUMP.stop()
             _boot_log('runtime pump stopped')
-            log_event('debug_stage5_pump_stopped', mode=_RUNTIME.get('pumpMode'))
+            try:
+                log_event('debug_stage5b_pump_stopped', mode=_RUNTIME.get('pumpMode'))
+            except Exception:
+                pass
+
         if _SERVER:
             _SERVER.stop()
             _boot_log('server stopped')
-            log_event('debug_stage5_server_stopped')
+            log_event('debug_stage5b_server_stopped')
 
         _SERVER = None
         _EXECUTOR = None
