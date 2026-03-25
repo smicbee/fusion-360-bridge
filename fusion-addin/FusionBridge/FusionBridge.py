@@ -7,6 +7,8 @@ import adsk.core
 
 _BOOT_LOG_PATH = Path(__file__).resolve().parent / 'fusion_bridge_boot.log'
 _ADDIN_DIR = str(Path(__file__).resolve().parent)
+_BIND_HOST = '0.0.0.0'
+_BIND_PORT = 8765
 _APP = None
 _UI = None
 _QUEUE = None
@@ -18,8 +20,10 @@ _RUNTIME = {
     'currentJobId': None,
     'startedAt': None,
     'pumpMode': None,
+    'bindHost': _BIND_HOST,
+    'bindPort': _BIND_PORT,
 }
-_RUNTIME_LOG_PREFIX = 'stage5-stable-bootstrap'
+_RUNTIME_LOG_PREFIX = 'stage6-lan-bind'
 
 if _ADDIN_DIR not in sys.path:
     sys.path.insert(0, _ADDIN_DIR)
@@ -49,6 +53,7 @@ def run(context):
     _boot_log('context type: {}'.format(type(context).__name__))
     _boot_log('addin_dir: {}'.format(_ADDIN_DIR))
     _boot_log('sys.path has addin dir: {}'.format(_ADDIN_DIR in sys.path))
+    _boot_log('bind target: {}:{}'.format(_BIND_HOST, _BIND_PORT))
 
     try:
         _APP = adsk.core.Application.get()
@@ -74,17 +79,17 @@ def run(context):
         from request_queue import RequestQueue
         from bridge_server import BridgeServer
         _boot_log('core modules imported')
-        log_event('debug_stage5b_core_modules_imported')
+        log_event('debug_stage6_core_modules_imported')
 
         _QUEUE = RequestQueue()
         _EXECUTOR = Executor()
         _boot_log('queue+executor ready')
 
         _RUNTIME['startedAt'] = datetime.utcnow().isoformat()
-        _SERVER = BridgeServer(_QUEUE, _RUNTIME, host='127.0.0.1', port=8765)
+        _SERVER = BridgeServer(_QUEUE, _RUNTIME, host=_BIND_HOST, port=_BIND_PORT)
         _SERVER.start()
-        _boot_log('bridge_server started on 127.0.0.1:8765')
-        log_event('debug_stage5b_server_started', host='127.0.0.1', port=8765)
+        _boot_log('bridge_server started on {}:{}'.format(_BIND_HOST, _BIND_PORT))
+        log_event('debug_stage6_server_started', host=_BIND_HOST, port=_BIND_PORT)
     except Exception:
         _boot_log('core init crashed')
         _boot_log(traceback.format_exc())
@@ -136,7 +141,7 @@ def run(context):
         _boot_log(traceback.format_exc())
 
     if _UI:
-        _safe_message_box('FusionBridge {} gestartet'.format(_RUNTIME_LOG_PREFIX))
+        _safe_message_box('FusionBridge {} gestartet auf {}:{}'.format(_RUNTIME_LOG_PREFIX, _BIND_HOST, _BIND_PORT))
         _boot_log('popup shown (phase final)')
 
 
@@ -150,14 +155,14 @@ def stop(context):
             _PUMP.stop()
             _boot_log('runtime pump stopped')
             try:
-                log_event('debug_stage5b_pump_stopped', mode=_RUNTIME.get('pumpMode'))
+                log_event('debug_stage6_pump_stopped', mode=_RUNTIME.get('pumpMode'))
             except Exception:
                 pass
 
         if _SERVER:
             _SERVER.stop()
             _boot_log('server stopped')
-            log_event('debug_stage5b_server_stopped')
+            log_event('debug_stage6_server_stopped')
 
         _SERVER = None
         _EXECUTOR = None

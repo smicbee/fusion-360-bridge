@@ -1,5 +1,14 @@
 # HTTP-API
 
+## Netzwerkbindung
+
+Aktuell bindet die Bridge auf `0.0.0.0:8765`, damit sie im lokalen Netzwerk erreichbar ist.
+
+- lokal: `http://127.0.0.1:8765`
+- LAN: `http://<deine-ip>:8765`
+
+Wenn aus dem LAN kein Zugriff klappt, ist meist die Host-Firewall der Grund.
+
 ## `GET /ping`
 
 Prüft, ob die Bridge läuft.
