@@ -1,0 +1,12 @@
+{
+  "autodeskProduct": "Fusion",
+  "type": "addin",
+  "id": "com.peroxo.fusionbridge",
+  "author": "Clawdia / Michael Beetz",
+  "description": {
+    "": "Open local exec bridge for Autodesk Fusion 360"
+  },
+  "version": "0.1.0",
+  "runOnStartup": false,
+  "supportedOS": "windows|mac"
+}
