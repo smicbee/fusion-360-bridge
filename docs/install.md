@@ -27,15 +27,16 @@ Typische Pfade:
 
 ## 3. Erwartung im aktuellen Debug-Stand
 
-- Popup: `FusionBridge Debug-Start erfolgreich`
+- Popup: `FusionBridge Debug-Stufe 2 erfolgreich`
 - Datei im Add-in-Ordner: `fusion_bridge_boot.log`
+- zusätzliche Datei: `fusion_bridge.log`
 
 ## 4. Wenn es nicht klappt
 
 - prüfen, ob `fusion_bridge_boot.log` entstanden ist
-- dessen Inhalt auslesen
-- falls keine Datei entsteht, crasht Fusion sehr früh beim Laden des Add-ins
+- prüfen, ob `fusion_bridge.log` entstanden ist
+- Inhalte auslesen
 
 ## Hinweis
 
-Die volle Bridge-Logik ist vorübergehend aus `FusionBridge.py` herausgenommen, damit der Start isoliert getestet werden kann. Nach erfolgreichem Grundstart wird sie schrittweise wieder aktiviert.
+Die volle Bridge-Logik bleibt weiter deaktiviert. In Debug-Stufe 2 testen wir nur, ob Logging und `Executor`-Import/Instanziierung auf deinem Fusion-System sauber funktionieren.
