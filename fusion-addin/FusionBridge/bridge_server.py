@@ -11,7 +11,7 @@ class BridgeRequestHandler(BaseHTTPRequestHandler):
     queue = None
     runtime = None
 
-    def _send_json(self, status_code: int, payload: dict):
+    def _send_json(self, status_code, payload):
         data = json.dumps(payload).encode('utf-8')
         self.send_response(status_code)
         self.send_header('Content-Type', 'application/json; charset=utf-8')

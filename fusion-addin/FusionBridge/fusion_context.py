@@ -29,7 +29,7 @@ def get_context():
     }
 
 
-def get_state(queue_size: int = 0, is_busy: bool = False, current_job_id: str | None = None, pump_mode: str | None = None):
+def get_state(queue_size=0, is_busy=False, current_job_id=None, pump_mode=None):
     ctx = _base_context()
     document = ctx['document']
     design = ctx['design']

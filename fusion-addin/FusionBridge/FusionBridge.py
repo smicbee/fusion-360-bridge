@@ -12,7 +12,7 @@ _EXECUTOR = None
 _BOOT_LOG_PATH = Path(__file__).resolve().parent / 'fusion_bridge_boot.log'
 
 
-def _boot_log(message: str) -> None:
+def _boot_log(message):
     try:
         with _BOOT_LOG_PATH.open('a', encoding='utf-8') as handle:
             handle.write(message + '\n')
@@ -27,16 +27,16 @@ def run(context):
 
     try:
         _APP = adsk.core.Application.get()
-        _boot_log(f'app acquired: {_APP is not None}')
+        _boot_log('app acquired: {}'.format(_APP is not None))
 
         _UI = _APP.userInterface if _APP else None
-        _boot_log(f'ui acquired: {_UI is not None}')
+        _boot_log('ui acquired: {}'.format(_UI is not None))
 
         product = _APP.activeProduct if _APP else None
-        _boot_log(f'active product type: {product.objectType if product else None}')
+        _boot_log('active product type: {}'.format(product.objectType if product else None))
 
         document = _APP.activeDocument if _APP else None
-        _boot_log(f'active document: {document.name if document else None}')
+        _boot_log('active document: {}'.format(document.name if document else None))
 
         log_event('debug_stage2_before_executor')
         _boot_log('logging_utils imported and used successfully')

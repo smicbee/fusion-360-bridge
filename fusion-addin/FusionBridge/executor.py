@@ -8,7 +8,7 @@ from logging_utils import log_event
 
 
 class Executor:
-    def execute(self, code: str, job_id: str | None = None) -> dict:
+    def execute(self, code, job_id=None):
         stdout_buffer = io.StringIO()
         context = get_context()
         started_at = time.time()
