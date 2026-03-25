@@ -1,5 +1,4 @@
 import threading
-import time
 import traceback
 import uuid
 
@@ -17,13 +16,19 @@ class _CustomEventHandler(adsk.core.CustomEventHandler):
         self._callback()
 
 
-class _TimerHandler(adsk.core.TimerEventHandler):
-    def __init__(self, callback):
-        super().__init__()
-        self._callback = callback
+_TimerEventHandler = getattr(adsk.core, 'TimerEventHandler', None)
 
-    def notify(self, args):
-        self._callback()
+
+if _TimerEventHandler is not None:
+    class _TimerHandler(_TimerEventHandler):
+        def __init__(self, callback):
+            super().__init__()
+            self._callback = callback
+
+        def notify(self, args):
+            self._callback()
+else:
+    _TimerHandler = None
 
 
 class RuntimePump:
@@ -80,7 +85,7 @@ class RuntimePump:
             log_event('runtime_pump_process_failed', error=traceback.format_exc())
 
     def _start_custom_event_mode(self):
-        self.event_id = f'fusionbridge.process.{uuid.uuid4()}'
+        self.event_id = 'fusionbridge.process.{}'.format(uuid.uuid4())
         self.custom_event = self.app.registerCustomEvent(self.event_id)
         self.custom_handler = _CustomEventHandler(self._safe_process)
         self.custom_event.add(self.custom_handler)
@@ -99,6 +104,10 @@ class RuntimePump:
             self.stop_event.wait(self.interval_ms / 1000.0)
 
     def start_timer_fallback(self):
+        if _TimerHandler is None:
+            log_event('runtime_pump_timer_fallback_unavailable')
+            raise RuntimeError('TimerEventHandler is not available in this adsk API')
+
         self.timer_handler = _TimerHandler(self._safe_process)
         self.app.registerTimerEvent(self.interval_ms)
         self.app.timerEvent.add(self.timer_handler)
