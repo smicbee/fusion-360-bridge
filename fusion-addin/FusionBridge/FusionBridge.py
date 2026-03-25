@@ -1,35 +1,26 @@
 import time
 import traceback
+
 import adsk.core
 
 from bridge_server import BridgeServer
 from executor import Executor
 from logging_utils import log_event
 from request_queue import RequestQueue
+from runtime_pump import RuntimePump
 
 _app = None
 _ui = None
-_handlers = []
 _queue = None
 _server = None
 _executor = None
-_timer = None
+_pump = None
 _runtime = {
     'busy': False,
     'currentJobId': None,
     'startedAt': None,
+    'pumpMode': None,
 }
-
-
-class TimerHandler(adsk.core.TimerEventHandler):
-    def __init__(self):
-        super().__init__()
-
-    def notify(self, args):
-        try:
-            process_pending_jobs()
-        except Exception:
-            log_event('timer_error', error=traceback.format_exc())
 
 
 def process_pending_jobs():
@@ -61,8 +52,24 @@ def process_pending_jobs():
         )
 
 
+def _start_runtime_pump():
+    global _app, _pump, _runtime
+
+    try:
+        _pump = RuntimePump(_app, process_pending_jobs, interval_ms=250)
+        _pump.start()
+        _runtime['pumpMode'] = _pump.mode
+        return
+    except Exception:
+        log_event('runtime_pump_custom_start_failed', error=traceback.format_exc())
+
+    _pump = RuntimePump(_app, process_pending_jobs, interval_ms=250)
+    _pump.start_timer_fallback()
+    _runtime['pumpMode'] = _pump.mode
+
+
 def run(context):
-    global _app, _ui, _queue, _server, _executor, _timer, _runtime
+    global _app, _ui, _queue, _server, _executor, _runtime
 
     _app = adsk.core.Application.get()
     _ui = _app.userInterface
@@ -73,13 +80,9 @@ def run(context):
         _runtime['startedAt'] = time.time()
         _server = BridgeServer(_queue, _runtime, host='127.0.0.1', port=8765)
         _server.start()
+        _start_runtime_pump()
 
-        _timer = TimerHandler()
-        _app.registerTimerEvent(250)
-        _app.timerEvent.add(_timer)
-        _handlers.append(_timer)
-
-        log_event('addin_started')
+        log_event('addin_started', pumpMode=_runtime['pumpMode'])
         _ui.messageBox('FusionBridge gestartet auf http://127.0.0.1:8765')
     except Exception:
         log_event('addin_start_failed', error=traceback.format_exc())
@@ -88,13 +91,12 @@ def run(context):
 
 
 def stop(context):
-    global _server, _app, _timer
+    global _server, _pump
 
     try:
-        if _app and _timer:
-            _app.timerEvent.remove(_timer)
-            _app.unregisterTimerEvent()
-            _timer = None
+        if _pump:
+            _pump.stop()
+            _pump = None
 
         if _server:
             _server.stop()

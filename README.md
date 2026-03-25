@@ -21,6 +21,7 @@ Das Projekt stellt eine lokale Exec-Bridge bereit:
 - Timeout pro Request
 - einfacher Datei-Logger
 - offener Python-Exec-Modus ohne Auth
+- Runtime Pump mit bevorzugtem Custom-Event-Modus und Timer-Fallback
 - Beispielskripte für einfache Modell-Erzeugung
 
 ## Projektstruktur
@@ -42,6 +43,7 @@ Bewusst offen für lokales/vertrautes Netzwerk. Keine Authentifizierung im MVP.
 
 1. Add-in in Fusion 360 installieren
 2. Bridge starten und `/ping` + `/state` prüfen
-3. Beispielskript via `/exec` ausführen
-4. Logs und Laufzeitverhalten im echten Fusion-Setup validieren
-5. Danach freie Modellierungs-Workflows aufbauen
+3. Sicherstellen, dass `pumpMode` sinnvoll gesetzt ist
+4. Beispielskripte via `/exec` ausführen
+5. Logs und Laufzeitverhalten im echten Fusion-Setup validieren
+6. Danach freie Modellierungs-Workflows aufbauen

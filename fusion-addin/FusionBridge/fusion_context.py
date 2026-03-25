@@ -29,7 +29,7 @@ def get_context():
     }
 
 
-def get_state(queue_size: int = 0, is_busy: bool = False, current_job_id: str | None = None):
+def get_state(queue_size: int = 0, is_busy: bool = False, current_job_id: str | None = None, pump_mode: str | None = None):
     ctx = _base_context()
     document = ctx['document']
     design = ctx['design']
@@ -44,4 +44,5 @@ def get_state(queue_size: int = 0, is_busy: bool = False, current_job_id: str | 
         'queueSize': queue_size,
         'busy': is_busy,
         'currentJobId': current_job_id,
+        'pumpMode': pump_mode,
     }

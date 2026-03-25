@@ -24,7 +24,7 @@ class BridgeRequestHandler(BaseHTTPRequestHandler):
             self._send_json(200, {
                 'ok': True,
                 'service': 'fusion-bridge',
-                'version': '0.2.0',
+                'version': '0.3.0',
             })
             return
 
@@ -33,6 +33,7 @@ class BridgeRequestHandler(BaseHTTPRequestHandler):
                 queue_size=self.queue.size(),
                 is_busy=self.runtime.get('busy', False),
                 current_job_id=self.runtime.get('currentJobId'),
+                pump_mode=self.runtime.get('pumpMode'),
             ))
             return
 

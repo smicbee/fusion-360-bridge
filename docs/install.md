@@ -34,10 +34,18 @@ curl http://127.0.0.1:8765/ping
 python3 bridge-client/call_exec.py --state
 ```
 
+Achte bei `--state` besonders auf:
+
+- `hasActiveDesign`
+- `queueSize`
+- `busy`
+- `pumpMode`
+
 ## 4. Beispielcode ausführen
 
 ```bash
 python3 bridge-client/call_exec.py examples/ping.py
+python3 bridge-client/call_exec.py examples/get_state.py
 python3 bridge-client/call_exec.py examples/create_box.py
 python3 bridge-client/call_exec.py --logs
 ```
@@ -52,4 +60,4 @@ fusion-addin/FusionBridge/fusion_bridge.log
 
 ## Hinweis
 
-Das ist weiter ein frühes PoC-Gerüst. Die kritischsten Teile für Requests, Logging und Timeout-Verhalten sind jetzt vorbereitet, aber die konkrete Timer-/Event-Anbindung in Fusion muss auf deinem echten Setup validiert werden.
+Das ist weiter ein frühes PoC-Gerüst. Die Laufzeit-Anbindung wurde robuster gemacht und bevorzugt jetzt Custom Events mit Timer-Fallback, aber die konkrete Ausführung muss auf deinem echten Fusion-Setup validiert werden.
