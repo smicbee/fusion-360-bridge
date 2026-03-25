@@ -5,11 +5,10 @@ from pathlib import Path
 
 import adsk.core
 
-from executor import Executor
 from logging_utils import log_event
+from executor import Executor
 from request_queue import RequestQueue
 from bridge_server import BridgeServer
-from runtime_pump import RuntimePump
 
 _BOOT_LOG_PATH = Path(__file__).resolve().parent / 'fusion_bridge_boot.log'
 _ADDIN_DIR = str(Path(__file__).resolve().parent)
@@ -25,11 +24,13 @@ _RUNTIME = {
     'startedAt': None,
     'pumpMode': None,
 }
-_RUNTIME_LOG_PREFIX = 'stage5-full'
+_RUNTIME_LOG_PREFIX = 'stage5-recovered'
 
 if _ADDIN_DIR not in sys.path:
     sys.path.insert(0, _ADDIN_DIR)
 
+
+# no top-level import of runtime_pump to keep startup resilient
 
 def _boot_log(message):
     try:
@@ -78,17 +79,24 @@ def process_pending_jobs():
 
 
 def _start_runtime_pump():
-    global _PUMP, _RUNTIME
+    global _PUMP, _APP, _RUNTIME
 
-    _PUMP = RuntimePump(_APP, process_pending_jobs, interval_ms=250)
     try:
-        _PUMP.start()
+        from runtime_pump import RuntimePump
+        _PUMP = RuntimePump(_APP, process_pending_jobs, interval_ms=250)
+        try:
+            _PUMP.start()
+            _boot_log('runtime_pump.start() ok')
+        except Exception:
+            _boot_log('runtime_pump.start() failed, fallback')
+            log_event('runtime_pump_custom_start_failed', error=traceback.format_exc())
+            _PUMP.start_timer_fallback()
+        _RUNTIME['pumpMode'] = _PUMP.mode
+        log_event('runtime_pump_mode', mode=_RUNTIME['pumpMode'])
+        _boot_log('runtime pump mode: {}'.format(_RUNTIME['pumpMode']))
     except Exception:
-        log_event('runtime_pump_custom_start_failed', error=traceback.format_exc())
-        _PUMP.start_timer_fallback()
-
-    _RUNTIME['pumpMode'] = _PUMP.mode
-    log_event('runtime_pump_mode', mode=_RUNTIME['pumpMode'])
+        _boot_log('runtime pump unavailable: {}'.format(traceback.format_exc()))
+        _safe_message_box('RuntimePump konnte nicht geladen werden (weiter ohne Pump)')
 
 
 def run(context):
@@ -120,10 +128,9 @@ def run(context):
         log_event('debug_stage5_server_started', host='127.0.0.1', port=8765)
 
         _start_runtime_pump()
-        _boot_log('runtime pump mode: {}'.format(_RUNTIME.get('pumpMode')))
 
         if _UI:
-            _safe_message_box('FusionBridge {} gestartet (Full runtime)'.format(_RUNTIME_LOG_PREFIX))
+            _safe_message_box('FusionBridge {} gestartet'.format(_RUNTIME_LOG_PREFIX))
             _boot_log('popup shown')
 
     except Exception:
