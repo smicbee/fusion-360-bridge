@@ -1,3 +1,4 @@
+import sys
 import traceback
 from datetime import datetime
 from pathlib import Path
@@ -5,10 +6,14 @@ from pathlib import Path
 import adsk.core
 
 _BOOT_LOG_PATH = Path(__file__).resolve().parent / 'fusion_bridge_boot.log'
+_ADDIN_DIR = str(Path(__file__).resolve().parent)
 _APP = None
 _UI = None
 _EXECUTOR = None
-_VERSION = 'stage3b-instrumented'
+_VERSION = 'stage3c-pathfix'
+
+if _ADDIN_DIR not in sys.path:
+    sys.path.insert(0, _ADDIN_DIR)
 
 
 def _boot_log(message):
@@ -27,12 +32,21 @@ def _safe_message_box(text):
             pass
 
 
+def _resolve_status(path_name):
+    return 'yes' if (Path(_ADDIN_DIR) / path_name).exists() else 'no'
+
+
 def run(context):
     global _APP, _UI, _EXECUTOR
 
     _boot_log('run() entered')
     _boot_log('version: {}'.format(_VERSION))
     _boot_log('context type: {}'.format(type(context).__name__))
+    _boot_log('sys.path contains addin dir: {}'.format(str(Path(_ADDIN_DIR) in map(Path, []))) if False else '')
+    _boot_log('addin_dir: {}'.format(_ADDIN_DIR))
+    _boot_log('logging_utils file exists: {}'.format(_resolve_status('logging_utils.py')))
+    _boot_log('executor file exists: {}'.format(_resolve_status('executor.py')))
+    _boot_log('sys.path has addin dir: {}'.format(_ADDIN_DIR in sys.path))
 
     try:
         _APP = adsk.core.Application.get()
@@ -51,7 +65,7 @@ def run(context):
         try:
             from logging_utils import log_event
             _boot_log('logging_utils imported')
-            log_event('stage3b_logging_utils_imported')
+            log_event('stage3c_logging_utils_imported')
         except Exception as e:
             _boot_log('logging_utils failed: {}'.format(e))
             _safe_message_box('Logging import failed: {}'.format(e))
@@ -64,7 +78,7 @@ def run(context):
             _boot_log('executor instantiated successfully')
             try:
                 from logging_utils import log_event
-                log_event('stage3b_executor_ready')
+                log_event('stage3c_executor_ready')
             except Exception:
                 _boot_log('log_event unavailable after executor')
             _safe_message_box('Executor ready in {}'.format(_VERSION))
