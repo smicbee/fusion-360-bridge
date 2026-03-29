@@ -1,28 +1,24 @@
-# Debug-Startup-Modus
+# Startup and troubleshooting guide
 
-## Aktueller Stand: Nuklearer Minimal-Test
+## What the add-in does now
 
-Dieses `FusionBridge.py` ist jetzt auf eine **absolut minimale Form** reduziert.
+The add-in starts the HTTP bridge and background queue processor in a single run.
+No launch-only debug mode exists anymore.
 
-## Ziel
+## Startup checks
 
-- Prüfen, ob Fusion den Add-in-Ladepfad überhaupt ausführt
-- Ausschluss, dass `adsk`/andere Module-Importe beim Start sofort crashen
+On startup, check:
 
-## Verhalten
+- add-in status in Fusion
+- file `fusion_bridge_boot.log` exists in the add-in folder
+- `/ping` responds
+- `/state` returns valid JSON
 
-- **`run(context)` schreibt nur in** `fusion_bridge_boot.log`
-- **kein** HTTP-Server
-- **kein** Popup
-- keine weiteren Module-Importe
+## If startup fails
 
-## Erwartete Signale
-
-Nach `Run` sollte `fusion_bridge_boot.log` im Add-in-Ordner mindestens enthalten:
-
-```text
-run() entered
-context type: ...
-```
-
-Wenn das nicht passiert, ist das Add-in vermutlich noch nicht korrekt geladen (Struktur/Manifest/Pfad).
+1. Confirm `FusionBridge` is present in:
+   - `%appdata%\\Autodesk\\Autodesk Fusion\\API\\AddIns\\` (Windows)
+   - `~/Library/Application Support/Autodesk/Autodesk Fusion/API/AddIns/` (macOS)
+2. Open Fusion **Scripts and Add-Ins** and ensure the add-in is allowed to run.
+3. If reachable locally but not remotely, verify LAN and firewall settings for port `8765`.
+4. Open and inspect `fusion_bridge_boot.log` for import or pump initialization errors.

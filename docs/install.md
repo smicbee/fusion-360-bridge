@@ -1,42 +1,56 @@
-# Installation (aktueller Debug-Stand)
+# Installation and deployment
 
-## 1. Add-in-Dateien ablegen
+## 1) Install the Fusion add-in
 
-Den Ordner `fusion-addin/FusionBridge` in den Fusion-Add-ins-Ordner kopieren.
-
-Typische Pfade:
+Copy the folder `fusion-addin/FusionBridge` into your Fusion add-ins directory:
 
 ### Windows
 
 ```text
-%appdata%\Autodesk\Autodesk Fusion\API\AddIns\FusionBridge
+%appdata%\\Autodesk\\Autodesk Fusion\\API\\AddIns\\
 ```
 
 ### macOS
 
 ```text
-~/Library/Application Support/Autodesk/Autodesk Fusion/API/AddIns/FusionBridge
+~/Library/Application Support/Autodesk/Autodesk Fusion/API/AddIns/
 ```
 
-## 2. Fusion starten
+In Fusion, open **Scripts and Add-Ins**, select `FusionBridge`, and click **Run**.
 
-- Fusion 360 öffnen
-- `Scripts and Add-Ins` öffnen
-- Add-in `FusionBridge` auswählen
-- `Run` klicken
+## 2) Network reachability check (required)
 
-## 3. Erwartung im aktuellen Debug-Stand
+The add-in binds to `0.0.0.0:8765` by default.
+OpenClaw must be able to reach this machine on port **8765**.
 
-- Popup: `FusionBridge Debug-Stufe 2 erfolgreich`
-- Datei im Add-in-Ordner: `fusion_bridge_boot.log`
-- zusätzliche Datei: `fusion_bridge.log`
+- On same machine: `http://127.0.0.1:8765`
+- On LAN: `http://<fusion-host-ip>:8765`
 
-## 4. Wenn es nicht klappt
+If remote checks fail:
+- check Windows/macOS firewall rules
+- check that Fusion is still running
+- check that the add-in is loaded and `fusion_bridge_boot.log` exists
 
-- prüfen, ob `fusion_bridge_boot.log` entstanden ist
-- prüfen, ob `fusion_bridge.log` entstanden ist
-- Inhalte auslesen
+## 3) Install and configure the OpenClaw plugin
 
-## Hinweis
+```bash
+cd /home/smicbee/.openclaw/workspace
+openclaw plugins install --link /home/smicbee/Ideenschmiede/projektFiles/fusion-360-bridge/openclaw-plugin
+```
 
-Die volle Bridge-Logik bleibt weiter deaktiviert. In Debug-Stufe 2 testen wir nur, ob Logging und `Executor`-Import/Instanziierung auf deinem Fusion-System sauber funktionieren.
+Then in OpenClaw config:
+
+```yaml
+plugins:
+  entries:
+    fusion-360-bridge:
+      enabled: true
+      config:
+        # Example if Fusion runs on another machine in the LAN
+        baseUrl: http://192.168.2.113:8765
+        timeoutMs: 10000
+```
+
+## 4) Configure a different port (optional)
+
+If you need a different port than `8765`, edit `_BIND_PORT` in `fusion-addin/FusionBridge/FusionBridge.py`, restart Fusion, and update the OpenClaw plugin config `baseUrl` to the same port.

@@ -38,11 +38,9 @@ def _boot_log(message):
 
 
 def _safe_message_box(text):
-    if _UI:
-        try:
-            _UI.messageBox(text)
-        except Exception:
-            pass
+    # Release mode: debug popups intentionally disabled.
+    # Keep function as no-op to avoid touching call sites.
+    return
 
 
 def run(context):

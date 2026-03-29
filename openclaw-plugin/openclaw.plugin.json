@@ -1,0 +1,22 @@
+{
+  "id": "fusion-360-bridge",
+  "name": "Fusion 360 Bridge",
+  "description": "OpenClaw tools that call Fusion 360 via the local FusionBridge add-in API.",
+  "version": "0.1.0",
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "baseUrl": {
+        "type": "string",
+        "default": "http://127.0.0.1:8765",
+        "description": "Base URL for the FusionBridge HTTP API (for example: http://192.168.2.113:8765)."
+      },
+      "timeoutMs": {
+        "type": "number",
+        "default": 10000,
+        "description": "HTTP request timeout in milliseconds."
+      }
+    }
+  }
+}

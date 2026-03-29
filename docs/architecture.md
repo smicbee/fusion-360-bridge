@@ -1,40 +1,40 @@
-# Architektur
+# Architecture
 
-## Überblick
+## Overview
 
-Die Bridge besteht aus vier Hauptteilen:
+The bridge has four main parts:
 
 1. **Fusion Add-in**
-   - läuft in Autodesk Fusion 360
-   - stellt Fusion-API-Kontext bereit
-   - arbeitet Requests aus einer Queue ab
+   - Runs in Autodesk Fusion 360.
+   - Provides a real Fusion API context (`adsk`, active document, design, etc.).
+   - Pulls jobs from an in-process queue.
 
-2. **HTTP-Listener**
-   - nimmt lokale Netzwerk-Requests an
-   - Endpunkte: `/ping`, `/state`, `/logs`, `/exec`
-   - legt Jobs in die Ausführungs-Queue
+2. **HTTP listener**
+   - Exposes network endpoints:
+     - `/ping`
+     - `/state`
+     - `/logs`
+     - `/exec`
 
 3. **Executor**
-   - führt Python-Code im Fusion-Kontext aus
-   - fängt `stdout`, Exceptions und optionale `result`-Objekte ab
+   - Executes Python code in Fusion context.
+   - Captures stdout, exceptions, optional return values, and runtime metadata.
 
-4. **Runtime Pump**
-   - stößt die Abarbeitung der Queue regelmäßig im Fusion-Kontext an
-   - bevorzugt **Custom Events**
-   - hat einen **Timer-Fallback**, falls Custom Events auf dem Zielsystem nicht wie erwartet funktionieren
+4. **Runtime pump**
+   - Triggers job processing in the UI thread context.
+   - Uses `custom-event` by default and falls back to timer mode when needed.
 
-## Ablauf
+## Flow
 
-1. Client sendet `POST /exec`
-2. Listener erzeugt einen Job und legt ihn in die Queue
-3. Runtime Pump triggert die Queue-Abarbeitung im Fusion-Kontext
-4. Add-in verarbeitet Jobs seriell
-5. Code wird via `exec(...)` im vorbereiteten Kontext ausgeführt
-6. Ergebnis wird dem wartenden HTTP-Request zurückgegeben
+1. OpenClaw tool or CLI sends a `POST /exec` request.
+2. Add-in queue creates a job and schedules it.
+3. Runtime pump wakes and executes one pending job.
+4. Executor runs Python code in prepared context.
+5. Execution result is returned to the waiting HTTP request.
 
-## Exec-Kontext
+## Execution context
 
-Dem auszuführenden Code werden typischerweise diese Objekte bereitgestellt:
+Executed snippets typically receive:
 
 - `adsk`
 - `app`
@@ -43,25 +43,28 @@ Dem auszuführenden Code werden typischerweise diese Objekte bereitgestellt:
 - `design`
 - `rootComp`
 - `document`
-- `result` (optional vom Skript zu setzen)
+- `result` (optional return object)
+- `helpers` module and convenience wrappers
 
-## Wichtige Designentscheidung
+## Design choice
 
-Kein restriktives DSL-Protokoll im MVP. Stattdessen offener Python-Exec-Modus, damit beliebige Fusion-API-Aktionen möglich sind.
+There is no restrictive DSL in this bridge version.
+Raw Python is intentionally supported so every Fusion capability remains available.
 
-## Laufzeitstrategie
+## Runtime strategy
 
-Weil die konkrete Event-/Timer-Anbindung in Fusion je nach Umgebung und API-Verhalten empfindlich sein kann, verwendet das Projekt jetzt eine zweistufige Strategie:
+Fusion event handling differs between machines and versions.
+The bridge uses a two-stage strategy:
 
-- Primär: `CustomEvent`-basierter Pump-Mechanismus
-- Fallback: `TimerEvent`-basierter Pump-Mechanismus
+- Primary: custom event pump
+- Fallback: timer-based pump
 
-Der aktive Modus wird über `/state` als `pumpMode` sichtbar.
+The active pump mode is exposed in `/state` as `pumpMode`.
 
-## Bekannte Risiken
+## Known risks
 
-- Keine Authentifizierung
-- Beliebiger Python-Code kann im Fusion-Kontext laufen
-- Fehlerhafte Skripte können aktive Designs verändern
-- Timeout auf HTTP-Ebene beendet nicht automatisch schon laufenden Fusion-Code
-- Reales Verhalten muss weiterhin auf dem echten Fusion-System validiert werden
+- No authentication by default.
+- Any Python code sent to `/exec` is executed in Fusion.
+- A failed script can modify the active design.
+- HTTP timeout does not cancel already running in-application Python immediately.
+- Behavior still depends on validation in a real Fusion environment.

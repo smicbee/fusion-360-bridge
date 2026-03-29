@@ -13,10 +13,9 @@ def app_info(app, document=None, design=None, root_comp=None):
 
 
 def show_message(ui, text):
-    if not ui:
-        return False
-    ui.messageBox(str(text))
-    return True
+    # Release mode: no debug popup side effects.
+    # Returning False signals "not shown" while keeping API compatibility.
+    return False
 
 
 def list_occurrences(root_comp):

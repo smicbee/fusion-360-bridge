@@ -1,17 +1,18 @@
-# HTTP-API
+# HTTP API
 
-## Netzwerkbindung
+## Network binding
 
-Aktuell bindet die Bridge auf `0.0.0.0:8765`, damit sie im lokalen Netzwerk erreichbar ist.
+The bridge binds to `0.0.0.0:8765` by default.
 
-- lokal: `http://127.0.0.1:8765`
-- LAN: `http://<deine-ip>:8765`
+OpenClaw (or any client) must be able to reach this host on this port.
+If needed, adjust the port in the add-in and plugin config together.
 
-Wenn aus dem LAN kein Zugriff klappt, ist meist die Host-Firewall der Grund.
+- Local: `http://127.0.0.1:8765`
+- LAN: `http://<fusion-host-ip>:8765`
 
 ## `GET /ping`
 
-Prüft, ob die Bridge läuft.
+Health check endpoint.
 
 ### Response
 
@@ -25,9 +26,9 @@ Prüft, ob die Bridge läuft.
 
 ## `GET /state`
 
-Liefert einfachen Laufzeitstatus.
+Returns runtime status including queue and execution state.
 
-### Beispiel-Response
+### Example response
 
 ```json
 {
@@ -45,9 +46,9 @@ Liefert einfachen Laufzeitstatus.
 
 ## `GET /logs`
 
-Liefert die letzten Logzeilen des Add-ins.
+Returns recent add-in log lines.
 
-### Beispiel-Response
+### Example response
 
 ```json
 {
@@ -60,7 +61,7 @@ Liefert die letzten Logzeilen des Add-ins.
 
 ## `POST /exec`
 
-Führt Python-Code im Fusion-Kontext aus.
+Execute Python code in Fusion context.
 
 ### Request
 
@@ -71,18 +72,12 @@ Führt Python-Code im Fusion-Kontext aus.
 }
 ```
 
-- `timeoutSeconds` ist optional.
-- Werte > `300` werden auf `300` begrenzt.
-- Es gibt keine feste Obergrenze für die Code-Länge im Body.
-- Neben rohem Python stehen im Exec-Kontext jetzt auch Helper bereit:
-  - `helpers`
-  - `app_info()`
-  - `show_message(text)`
-  - `list_occurrences()`
-  - `list_bodies()`
-  - `create_box(width, height, depth)`
+- `code` is required and must be a non-empty string.
+- `timeoutSeconds` is optional.
+- Values above `300` are clamped to `300`.
+- No artificial limit on script length is enforced by the bridge.
 
-### Erfolgs-Response
+### Success response
 
 ```json
 {
@@ -95,7 +90,7 @@ Führt Python-Code im Fusion-Kontext aus.
 }
 ```
 
-### Fehler-Response
+### Error response
 
 ```json
 {
@@ -108,7 +103,7 @@ Führt Python-Code im Fusion-Kontext aus.
 }
 ```
 
-### Timeout-Response
+### Timeout response
 
 ```json
 {
@@ -118,9 +113,18 @@ Führt Python-Code im Fusion-Kontext aus.
 }
 ```
 
-## Client-Komfort
+## OpenClaw plugin
 
-Der CLI-Client unterstützt jetzt auch Inline-Code:
+The OpenClaw plugin in this repository exposes equivalent tools:
+
+- `fusion_bridge_ping`
+- `fusion_bridge_state`
+- `fusion_bridge_logs`
+- `fusion_bridge_exec`
+
+## Client convenience
+
+The local CLI also supports inline code:
 
 ```bash
 python3 bridge-client/call_exec.py --code "print(app_info())"
