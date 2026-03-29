@@ -10,7 +10,7 @@
       "baseUrl": {
         "type": "string",
         "default": "http://127.0.0.1:8765",
-        "description": "Base URL for the FusionBridge HTTP API (for example: http://192.168.2.113:8765)."
+        "description": "Base URL for the FusionBridge HTTP API (for example: http://<bridge-host-ip>:8765)."
       },
       "timeoutMs": {
         "type": "number",

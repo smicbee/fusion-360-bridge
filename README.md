@@ -38,8 +38,8 @@ Then in Fusion:
 ### 2) Install the OpenClaw plugin
 
 ```bash
-cd /home/smicbee/.openclaw/workspace
-openclaw plugins install --link /home/smicbee/Ideenschmiede/projektFiles/fusion-360-bridge/openclaw-plugin
+cd <path-to-openclaw-workspace>
+openclaw plugins install --link <path-to-repo>/openclaw-plugin
 ```
 
 Then enable and configure it in OpenClaw (example):
@@ -50,17 +50,17 @@ plugins:
     fusion-360-bridge:
       enabled: true
       config:
-        baseUrl: http://192.168.2.113:8765
+        baseUrl: http://<fusion-host-ip>:8765
         timeoutMs: 10000
 ```
 
-If your bridge runs locally and you run OpenClaw on the same machine, `http://127.0.0.1:8765` is enough.
+If your bridge runs locally and you run OpenClaw on the same machine, `http://<bridge-host>:8765` is enough.
 
 ### 3) Verify connectivity
 
 ```bash
-curl http://127.0.0.1:8765/ping
-curl http://127.0.0.1:8765/state
+curl http://<fusion-host-or-local>:8765/ping
+curl http://<fusion-host-or-local>:8765/state
 python3 bridge-client/call_exec.py --code "print(app_info())"
 ```
 

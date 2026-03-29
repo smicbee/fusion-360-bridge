@@ -6,11 +6,11 @@
 2. Confirm `/state` and `/ping` respond:
 
 ```bash
-curl http://127.0.0.1:8765/ping
-curl http://127.0.0.1:8765/state
+curl http://<fusion-host-or-local>:8765/ping
+curl http://<fusion-host-or-local>:8765/state
 ```
 
-3. If Fusion is on another host, replace `127.0.0.1` with that host IP and ensure port `8765` is reachable.
+3. If Fusion is on another host, replace `<fusion-host-ip>` with your actual host and ensure port `8765` is reachable.
 
 ## 2) Sanity checks
 

@@ -23,7 +23,7 @@ In Fusion, open **Scripts and Add-Ins**, select `FusionBridge`, and click **Run*
 The add-in binds to `0.0.0.0:8765` by default.
 OpenClaw must be able to reach this machine on port **8765**.
 
-- On same machine: `http://127.0.0.1:8765`
+- On same machine: `http://<bridge-host>:8765`
 - On LAN: `http://<fusion-host-ip>:8765`
 
 If remote checks fail:
@@ -34,8 +34,8 @@ If remote checks fail:
 ## 3) Install and configure the OpenClaw plugin
 
 ```bash
-cd /home/smicbee/.openclaw/workspace
-openclaw plugins install --link /home/smicbee/Ideenschmiede/projektFiles/fusion-360-bridge/openclaw-plugin
+cd <path-to-openclaw-workspace>
+openclaw plugins install --link <path-to-repo>/openclaw-plugin
 ```
 
 Then in OpenClaw config:
@@ -47,7 +47,7 @@ plugins:
       enabled: true
       config:
         # Example if Fusion runs on another machine in the LAN
-        baseUrl: http://192.168.2.113:8765
+        baseUrl: http://<fusion-host-ip>:8765
         timeoutMs: 10000
 ```
 

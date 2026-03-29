@@ -17,8 +17,8 @@ It is intended to be used only when the Fusion 360 add-in is installed and runni
 ## Install from local checkout
 
 ```bash
-cd /home/smicbee/.openclaw/workspace
-openclaw plugins install --link /home/smicbee/Ideenschmiede/projektFiles/fusion-360-bridge/openclaw-plugin
+cd <path-to-openclaw-workspace>
+openclaw plugins install --link <path-to-repo>/openclaw-plugin
 ```
 
 ## Minimal plugin config
@@ -30,7 +30,7 @@ plugins:
       enabled: true
       config:
         # IP of machine running Fusion 360
-        baseUrl: http://192.168.2.113:8765
+        baseUrl: http://<fusion-host-ip>:8765
         # HTTP timeout for plugin requests
         timeoutMs: 10000
 ```

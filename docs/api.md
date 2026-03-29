@@ -7,7 +7,7 @@ The bridge binds to `0.0.0.0:8765` by default.
 OpenClaw (or any client) must be able to reach this host on this port.
 If needed, adjust the port in the add-in and plugin config together.
 
-- Local: `http://127.0.0.1:8765`
+- Local: `http://<bridge-host>:8765`
 - LAN: `http://<fusion-host-ip>:8765`
 
 ## `GET /ping`
